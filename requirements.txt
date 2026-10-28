@@ -1,0 +1,3 @@
+# Optional: finds any circuit's time zone from its coordinates.
+# Without it the builder uses its own list of circuits and countries.
+timezonefinder>=6.5

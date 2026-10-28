@@ -1,0 +1,16 @@
+[
+ {
+  "season": 2027,
+  "name": "Pre-Season Testing",
+  "circuit": "Bahrain International Circuit",
+  "circuit_id": "bahrain",
+  "locality": "Sakhir",
+  "country": "Bahrain",
+  "lat": 26.0325,
+  "long": 50.5106,
+  "days": ["2027-02-24", "2027-02-25", "2027-02-26", "2027-02-27"],
+  "start_local": "10:00",
+  "end_local": "19:00",
+  "provisional": true
+ }
+]

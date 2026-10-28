@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Formula 1 calendar</title>
+<style>
+  :root { color-scheme: light dark; --bg: #f2f2f7; --card: #fff; --text: #000; --sub: #6e6e73; --red: #d70015; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #000; --card: #1c1c1e; --text: #fff; --sub: #aeaeb2; --red: #ff453a; } }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 520px; margin: 0 auto; padding: 40px 16px; display: flex; flex-direction: column; gap: 14px; }
+  h1 { margin: 0; font-size: 30px; }
+  p { margin: 0; color: var(--sub); }
+  .card { background: var(--card); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  a.btn { display: block; text-align: center; padding: 13px; border-radius: 14px; background: var(--red); color: #fff; font-weight: 600; text-decoration: none; }
+  code { font-size: 13px; word-break: break-all; color: var(--text); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Formula 1 calendar</h1>
+  <p>Grands Prix, Sprints and pre-season testing. No alerts, shown as Free, each event in the circuit's local time. Updated automatically · last built {{UPDATED}}.</p>
+  <div class="card">
+    <a class="btn" id="sub" href="f1.ics">Subscribe in Apple Calendar</a>
+    <p>Or paste this address into any calendar app:</p>
+    <code id="addr">f1.ics</code>
+  </div>
+</main>
+<script>
+  const url = new URL('f1.ics', location.href);
+  document.getElementById('addr').textContent = url.href;
+  document.getElementById('sub').href = url.href.replace(/^https?:/, 'webcal:');
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+name: Build F1 calendar
+
+on:
+  workflow_dispatch:        # the "Run workflow" button
+  push:
+    branches: [main]
+    paths-ignore: ["data/**"]
+  schedule:
+    - cron: "17 6 * * 1,2,3"        # Mon–Wed: once a day
+    - cron: "17 * * * 0,4,5,6"      # Thu–Sun: every hour (race weekends)
+
+permissions:
+  contents: write   # to save the change log and cache back to the repository
+  pages: write
+  id-token: write
+
+concurrency:
+  group: build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Build the calendar
+        env:
+          PAGES_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+        run: python build.py
+
+      # Saving the cache and change log also keeps the repository "active",
+      # so GitHub never pauses the schedule.
+      - name: Save the change log and cache
+        run: |
+          git config user.name "f1-calendar bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet || git commit -m "Update calendar data"
+          git pull --rebase --autostash && git push
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
