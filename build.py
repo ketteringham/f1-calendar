@@ -785,8 +785,13 @@ def f1_pages(events: list[dict]) -> None:
             name = (F1_PAGE_BY_CIRCUIT.get(cid) or F1_PAGE_BY_TOWN.get(town)
                     or F1_PAGE_BY_COUNTRY.get(country) or slug(country))
             if listed is not None and name not in names:
-                print(f"  note: no formula1.com page called {name!r} for {e['title']}; leaving the link out", file=sys.stderr)
-                continue
+                # a round held away from home (e.g. the Bahrain Grand Prix run elsewhere) keeps its race's page name
+                named = slug(re.sub(r"\b(grand prix|sprint)\b", "", e.get("race_name") or "", flags=re.I))
+                if named in names:
+                    name = named
+                else:
+                    print(f"  note: no formula1.com page called {name!r} for {e['title']}; leaving the link out", file=sys.stderr)
+                    continue
             if name:
                 e["f1_url"] = f"{F1_SITE}/{season}/{name}"
 
