@@ -1,3 +1,5 @@
 # Optional: finds any circuit's time zone from its coordinates.
 # Without it the builder uses its own list of circuits and countries.
 timezonefinder>=6.5
+# Shrinks driver headshots to a sharp, small size.
+Pillow>=10

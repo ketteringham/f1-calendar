@@ -256,16 +256,100 @@ def refresh_headshots() -> None:
                 seeded.append(year)
 
 
+# ------------------------------------------------------------------ images, kept in the repository
+
+IMG = ROOT / "img"
+HEADSHOT_PX = 480  # longest side; sharp on a phone's podium tile, small to store
+
+
+def fetch_bytes(url: str) -> bytes | None:
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": AGENT})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            if r.status != 200:
+                return None
+            return r.read()
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def bigger_versions(url: str) -> list[str]:
+    """F1's headshot links ask for a small size; try the larger ones first, then the original link."""
+    out = []
+    if ".transform/" in url:
+        out.append(url.split(".transform/")[0])  # the original upload
+        out += [re.sub(r"/\d+col/", f"/{n}col/", url) for n in (4, 3, 2)]
+    if re.search(r"\bw_\d+", url):
+        out.append(re.sub(r"\bw_\d+", "w_960", url))
+    out.append(url)
+    seen = []
+    for u in out:
+        if u not in seen:
+            seen.append(u)
+    return seen
+
+
+def save_headshot(key: str, src: str) -> bool:
+    """Download the best version of a headshot and store it as img/drivers/<key>.webp."""
+    dest = IMG / "drivers" / f"{slug(key)}.webp"
+    meta = CACHE.setdefault("images", {})
+    if dest.exists() and meta.get(key) == src:
+        return True
+    for url in bigger_versions(src):
+        data = fetch_bytes(url)
+        if not data or len(data) < 1000:
+            continue
+        try:
+            from io import BytesIO
+
+            from PIL import Image
+            im = Image.open(BytesIO(data))
+            im.load()
+            if im.width < 120:  # a tiny one: try the next size
+                continue
+            im = im.convert("RGBA")
+            im.thumbnail((HEADSHOT_PX, HEADSHOT_PX), Image.LANCZOS)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            im.save(dest, "WEBP", quality=86, method=6)
+        except Exception as err:  # noqa: BLE001
+            print(f"  note: couldn't process headshot for {key}: {err}", file=sys.stderr)
+            continue
+        meta[key] = src
+        return True
+    return dest.exists()
+
+
+def save_flag(cc: str) -> bool:
+    dest = IMG / "flags" / f"{cc}.svg"
+    if dest.exists():
+        return True
+    data = fetch_bytes(f"https://flagcdn.com/{cc}.svg")
+    if not data or b"<svg" not in data[:2000]:
+        return False
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(data)
+    return True
+
+
+def headshot_url(key: str, fallback: str | None) -> str | None:
+    if key and (IMG / "drivers" / f"{slug(key)}.webp").exists():
+        return f"{PAGES_URL}/img/drivers/{slug(key)}.webp"
+    return fallback
+
+
 def known_driver(given: str, last: str) -> dict:
     """Headshot details for a driver. Data sources disagree on given names ("Andrea Kimi" vs "Kimi"),
     so try each given name, then the surname alone when only one driver has it."""
     people = CACHE.get("drivers", {})
     for tok in (given or "").split() or [""]:
-        hit = people.get(f"{tok[:1]}.{last}".lower())
-        if hit:
-            return hit
-    same = [v for k, v in people.items() if k.split(".", 1)[-1] == (last or "").lower()]
-    return same[0] if len(same) == 1 else {}
+        k = f"{tok[:1]}.{last}".lower()
+        if k in people:
+            return dict(people[k], headshot=headshot_url(k, people[k].get("headshot")))
+    same = [k for k in people if k.split(".", 1)[-1] == (last or "").lower()]
+    if len(same) == 1:
+        k = same[0]
+        return dict(people[k], headshot=headshot_url(k, people[k].get("headshot")))
+    return {}
 
 
 def person(driver: dict, constructor: dict | None) -> dict:
@@ -528,7 +612,12 @@ def enrich(e: dict) -> dict:
         end_utc = start_utc + dt.timedelta(days=1)
     e.update(start_utc=start_utc, end_utc=end_utc, flag=flag_emoji(cc),
              provisional=e.get("provisional", False) or not e["timed"])
-    e["flag_images"] = {"svg": f"https://flagcdn.com/{cc}.svg", "png": f"https://flagcdn.com/w640/{cc}.png"} if cc else None
+    if cc and (IMG / "flags" / f"{cc}.svg").exists():
+        e["flag_images"] = {"svg": f"{PAGES_URL}/img/flags/{cc}.svg"}
+    elif cc:
+        e["flag_images"] = {"svg": f"https://flagcdn.com/{cc}.svg"}
+    else:
+        e["flag_images"] = None
     if e["type"] in ("race", "sprint") and c.get("id"):
         kind = "sprint" if e["type"] == "sprint" else "results"
         e["last_time"] = faces(soft(last_time_here, e["season"], c["id"], kind))
@@ -806,6 +895,15 @@ def main() -> int:
             circuits.setdefault(e["circuit"]["country_code"], e["circuit"])
         events += evs
         events += testing_events(year, circuits)
+
+    # headshots and flags are kept in the repository and served from this site, so the pop-up never
+    # depends on F1's or flagcdn's servers and the headshots are a sharp size
+    for key, d in sorted(CACHE.get("drivers", {}).items()):
+        if d.get("headshot"):
+            soft(save_headshot, key, d["headshot"])
+    for cc in sorted({e["circuit"].get("country_code") for e in events if e["circuit"].get("country_code")}):
+        soft(save_flag, cc)
+
     events = [enrich(e) for e in events]
     events.sort(key=lambda e: e["start_utc"])
 
@@ -832,6 +930,9 @@ def main() -> int:
     }
     (SITE / "f1.json").write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
     (SITE / ".nojekyll").write_text("")
+    if IMG.exists():
+        import shutil
+        shutil.copytree(IMG, SITE / "img", dirs_exist_ok=True)
     index = (ROOT / "index.html").read_text(encoding="utf-8")
     (SITE / "index.html").write_text(index.replace("{{UPDATED}}", NOW.astimezone(UK).strftime("%-d %b %Y, %H:%M")),
                                      encoding="utf-8")
