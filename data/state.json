@@ -140,38 +140,58 @@
   "timed": true
  },
  "2026-testing-day-0211@f1-calendar.ketteringham.github.io": {
-  "place": "Sakhir",
+  "place": "Bahrain International Circuit",
   "start": "2026-02-11T07:00:00+00:00",
   "timed": true
  },
  "2026-testing-day-0212@f1-calendar.ketteringham.github.io": {
-  "place": "Sakhir",
+  "place": "Bahrain International Circuit",
   "start": "2026-02-12T07:00:00+00:00",
   "timed": true
  },
  "2026-testing-day-0213@f1-calendar.ketteringham.github.io": {
-  "place": "Sakhir",
+  "place": "Bahrain International Circuit",
   "start": "2026-02-13T07:00:00+00:00",
   "timed": true
  },
  "2026-testing-day-0218@f1-calendar.ketteringham.github.io": {
-  "place": "Sakhir",
+  "place": "Bahrain International Circuit",
   "start": "2026-02-18T07:00:00+00:00",
   "timed": true
  },
  "2026-testing-day-0219@f1-calendar.ketteringham.github.io": {
-  "place": "Sakhir",
+  "place": "Bahrain International Circuit",
   "start": "2026-02-19T07:00:00+00:00",
   "timed": true
  },
  "2026-testing-day-0220@f1-calendar.ketteringham.github.io": {
-  "place": "Sakhir",
+  "place": "Bahrain International Circuit",
   "start": "2026-02-20T07:00:00+00:00",
   "timed": true
  },
  "2026-united-states-grand-prix-race@f1-calendar.ketteringham.github.io": {
   "place": "Circuit of the Americas",
   "start": "2026-10-25T20:00:00+00:00",
+  "timed": true
+ },
+ "2027-testing-day-0224@f1-calendar.ketteringham.github.io": {
+  "place": "Bahrain International Circuit",
+  "start": "2027-02-24T04:00:00+00:00",
+  "timed": true
+ },
+ "2027-testing-day-0225@f1-calendar.ketteringham.github.io": {
+  "place": "Bahrain International Circuit",
+  "start": "2027-02-25T04:00:00+00:00",
+  "timed": true
+ },
+ "2027-testing-day-0226@f1-calendar.ketteringham.github.io": {
+  "place": "Bahrain International Circuit",
+  "start": "2027-02-26T04:00:00+00:00",
+  "timed": true
+ },
+ "2027-testing-day-0227@f1-calendar.ketteringham.github.io": {
+  "place": "Bahrain International Circuit",
+  "start": "2027-02-27T04:00:00+00:00",
   "timed": true
  }
 }
