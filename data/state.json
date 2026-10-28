@@ -1,0 +1,177 @@
+{
+ "2026-abu-dhabi-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Yas Marina Circuit",
+  "start": "2026-12-06T13:00:00+00:00",
+  "timed": true
+ },
+ "2026-australian-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Albert Park Grand Prix Circuit",
+  "start": "2026-03-08T04:00:00+00:00",
+  "timed": true
+ },
+ "2026-austrian-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Red Bull Ring",
+  "start": "2026-06-28T13:00:00+00:00",
+  "timed": true
+ },
+ "2026-azerbaijan-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Baku City Circuit",
+  "start": "2026-09-26T11:00:00+00:00",
+  "timed": true
+ },
+ "2026-bahrain-grand-prix-in-malaysia-race@f1-calendar.ketteringham.github.io": {
+  "place": "Sepang International Circuit",
+  "start": "2026-10-04T07:00:00+00:00",
+  "timed": true
+ },
+ "2026-barcelona-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Circuit de Barcelona-Catalunya",
+  "start": "2026-06-14T13:00:00+00:00",
+  "timed": true
+ },
+ "2026-belgian-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Circuit de Spa-Francorchamps",
+  "start": "2026-07-19T13:00:00+00:00",
+  "timed": true
+ },
+ "2026-brazilian-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Autódromo José Carlos Pace",
+  "start": "2026-11-08T17:00:00+00:00",
+  "timed": true
+ },
+ "2026-british-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Silverstone Circuit",
+  "start": "2026-07-05T14:00:00+00:00",
+  "timed": true
+ },
+ "2026-british-grand-prix-sprint@f1-calendar.ketteringham.github.io": {
+  "place": "Silverstone Circuit",
+  "start": "2026-07-04T11:00:00+00:00",
+  "timed": true
+ },
+ "2026-canadian-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Circuit Gilles Villeneuve",
+  "start": "2026-05-24T20:00:00+00:00",
+  "timed": true
+ },
+ "2026-canadian-grand-prix-sprint@f1-calendar.ketteringham.github.io": {
+  "place": "Circuit Gilles Villeneuve",
+  "start": "2026-05-23T16:00:00+00:00",
+  "timed": true
+ },
+ "2026-chinese-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Shanghai International Circuit",
+  "start": "2026-03-15T07:00:00+00:00",
+  "timed": true
+ },
+ "2026-chinese-grand-prix-sprint@f1-calendar.ketteringham.github.io": {
+  "place": "Shanghai International Circuit",
+  "start": "2026-03-14T03:00:00+00:00",
+  "timed": true
+ },
+ "2026-dutch-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Circuit Park Zandvoort",
+  "start": "2026-08-23T13:00:00+00:00",
+  "timed": true
+ },
+ "2026-dutch-grand-prix-sprint@f1-calendar.ketteringham.github.io": {
+  "place": "Circuit Park Zandvoort",
+  "start": "2026-08-22T10:00:00+00:00",
+  "timed": true
+ },
+ "2026-hungarian-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Hungaroring",
+  "start": "2026-07-26T13:00:00+00:00",
+  "timed": true
+ },
+ "2026-italian-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Autodromo Nazionale di Monza",
+  "start": "2026-09-06T13:00:00+00:00",
+  "timed": true
+ },
+ "2026-japanese-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Suzuka Circuit",
+  "start": "2026-03-29T05:00:00+00:00",
+  "timed": true
+ },
+ "2026-las-vegas-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Las Vegas Strip Street Circuit",
+  "start": "2026-11-22T04:00:00+00:00",
+  "timed": true
+ },
+ "2026-mexico-city-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Autódromo Hermanos Rodríguez",
+  "start": "2026-11-01T20:00:00+00:00",
+  "timed": true
+ },
+ "2026-miami-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Miami International Autodrome",
+  "start": "2026-05-03T20:00:00+00:00",
+  "timed": true
+ },
+ "2026-miami-grand-prix-sprint@f1-calendar.ketteringham.github.io": {
+  "place": "Miami International Autodrome",
+  "start": "2026-05-02T16:00:00+00:00",
+  "timed": true
+ },
+ "2026-monaco-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Circuit de Monaco",
+  "start": "2026-06-07T13:00:00+00:00",
+  "timed": true
+ },
+ "2026-qatar-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Lusail International Circuit",
+  "start": "2026-11-29T16:00:00+00:00",
+  "timed": true
+ },
+ "2026-singapore-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Marina Bay Street Circuit",
+  "start": "2026-10-11T12:00:00+00:00",
+  "timed": true
+ },
+ "2026-singapore-grand-prix-sprint@f1-calendar.ketteringham.github.io": {
+  "place": "Marina Bay Street Circuit",
+  "start": "2026-10-10T09:00:00+00:00",
+  "timed": true
+ },
+ "2026-spanish-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Madring",
+  "start": "2026-09-13T13:00:00+00:00",
+  "timed": true
+ },
+ "2026-testing-day-0211@f1-calendar.ketteringham.github.io": {
+  "place": "Sakhir",
+  "start": "2026-02-11T07:00:00+00:00",
+  "timed": true
+ },
+ "2026-testing-day-0212@f1-calendar.ketteringham.github.io": {
+  "place": "Sakhir",
+  "start": "2026-02-12T07:00:00+00:00",
+  "timed": true
+ },
+ "2026-testing-day-0213@f1-calendar.ketteringham.github.io": {
+  "place": "Sakhir",
+  "start": "2026-02-13T07:00:00+00:00",
+  "timed": true
+ },
+ "2026-testing-day-0218@f1-calendar.ketteringham.github.io": {
+  "place": "Sakhir",
+  "start": "2026-02-18T07:00:00+00:00",
+  "timed": true
+ },
+ "2026-testing-day-0219@f1-calendar.ketteringham.github.io": {
+  "place": "Sakhir",
+  "start": "2026-02-19T07:00:00+00:00",
+  "timed": true
+ },
+ "2026-testing-day-0220@f1-calendar.ketteringham.github.io": {
+  "place": "Sakhir",
+  "start": "2026-02-20T07:00:00+00:00",
+  "timed": true
+ },
+ "2026-united-states-grand-prix-race@f1-calendar.ketteringham.github.io": {
+  "place": "Circuit of the Americas",
+  "start": "2026-10-25T20:00:00+00:00",
+  "timed": true
+ }
+}
