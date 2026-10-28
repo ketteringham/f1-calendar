@@ -786,7 +786,9 @@ def f1_pages(events: list[dict]) -> None:
                     or F1_PAGE_BY_COUNTRY.get(country) or slug(country))
             if listed is not None and name not in names:
                 # a round held away from home (e.g. the Bahrain Grand Prix run elsewhere) keeps its race's page name
-                named = slug(re.sub(r"\b(grand prix|sprint)\b", "", e.get("race_name") or "", flags=re.I))
+                # ("Bahrain Grand Prix in Malaysia" -> "bahrain")
+                race = re.sub(r"\s+in\s+.*$", "", e.get("race_name") or "", flags=re.I)
+                named = slug(re.sub(r"\b(grand prix|sprint)\b", "", race, flags=re.I))
                 if named in names:
                     name = named
                 else:
