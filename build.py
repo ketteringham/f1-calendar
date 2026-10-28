@@ -273,14 +273,28 @@ def fetch_bytes(url: str) -> bytes | None:
         return None
 
 
-def bigger_versions(url: str) -> list[str]:
-    """F1's headshot links ask for a small size; try the larger ones first, then the original link."""
+TEAM_SLUGS = {  # how F1's image library spells team names
+    "red bull racing": "redbullracing", "red bull": "redbullracing", "racing bulls": "racingbulls", "rb": "racingbulls",
+    "aston martin": "astonmartin", "kick sauber": "kicksauber", "sauber": "kicksauber", "haas f1 team": "haasf1team",
+    "haas": "haasf1team",
+}
+
+
+def bigger_versions(url: str, team: str = "") -> list[str]:
+    """F1's headshot links ask for a small size; try the larger ones first, then F1's newer image library
+    (where some drivers only exist), then the original link."""
     out = []
     if ".transform/" in url:
         out.append(url.split(".transform/")[0])  # the original upload
         out += [re.sub(r"/\d+col/", f"/{n}col/", url) for n in (4, 3, 2)]
     if re.search(r"\bw_\d+", url):
         out.append(re.sub(r"\bw_\d+", "w_960", url))
+    code = re.search(r"/([a-z]{6}\d{2})\.png", url)  # e.g. carsai01
+    if code and team:
+        t = TEAM_SLUGS.get(team.strip().lower(), re.sub(r"[^a-z0-9]", "", team.lower()))
+        for year in (TODAY.year, TODAY.year - 1):
+            out.append(f"https://media.formula1.com/image/upload/c_lfill,w_960/q_auto/v1740000000/common/f1/{year}/"
+                       f"{t}/{code.group(1)}/{year}{t}{code.group(1)}right.webp")
     out.append(url)
     seen = []
     for u in out:
@@ -289,13 +303,31 @@ def bigger_versions(url: str) -> list[str]:
     return seen
 
 
-def save_headshot(key: str, src: str) -> bool:
-    """Download the best version of a headshot and store it as img/drivers/<key>.webp."""
+def is_placeholder(im) -> bool:
+    """F1 answers a missing photo with a plain grey figure. Real headshots are full of colour (faces, race suits)."""
+    from PIL import ImageStat
+    rgba = im.convert("RGBA")
+    alpha = rgba.getchannel("A").point(lambda a: 255 if a > 200 else 0)
+    if not alpha.getbbox():
+        return True
+    sat = rgba.convert("RGB").convert("HSV").getchannel("S")
+    return ImageStat.Stat(sat, alpha).mean[0] < 14
+
+
+def save_headshot(key: str, src: str, team: str = "") -> bool:
+    """Download the best version of a headshot and store it as img/drivers/<key>.webp. If F1 only has its
+    grey placeholder, store nothing (the card then shows its own team-coloured outline), and look again in a week."""
     dest = IMG / "drivers" / f"{slug(key)}.webp"
     meta = CACHE.setdefault("images", {})
-    if dest.exists() and meta.get(key) == src:
-        return True
-    for url in bigger_versions(src):
+    m = meta.get(key)
+    if isinstance(m, str):  # older cache entries were just the source link
+        m = {"src": m}
+    if m and m.get("src") == src:
+        if dest.exists() and not is_placeholder_file(dest):
+            return True
+        if m.get("missing") and (NOW - dt.datetime.fromisoformat(m["missing"])).days < 7:
+            return False
+    for url in bigger_versions(src, team):
         data = fetch_bytes(url)
         if not data or len(data) < 1000:
             continue
@@ -305,7 +337,7 @@ def save_headshot(key: str, src: str) -> bool:
             from PIL import Image
             im = Image.open(BytesIO(data))
             im.load()
-            if im.width < 120:  # a tiny one: try the next size
+            if im.width < 120 or is_placeholder(im):  # tiny, or F1's grey stand-in: try the next one
                 continue
             im = im.convert("RGBA")
             im.thumbnail((HEADSHOT_PX, HEADSHOT_PX), Image.LANCZOS)
@@ -314,9 +346,23 @@ def save_headshot(key: str, src: str) -> bool:
         except Exception as err:  # noqa: BLE001
             print(f"  note: couldn't process headshot for {key}: {err}", file=sys.stderr)
             continue
-        meta[key] = src
+        meta[key] = {"src": src, "from": url}
         return True
-    return dest.exists()
+    if dest.exists() and is_placeholder_file(dest):
+        dest.unlink()  # a placeholder stored by an earlier build
+    meta[key] = {"src": src, "missing": NOW.isoformat()}
+    print(f"  note: no real headshot for {key} yet", file=sys.stderr)
+    return False
+
+
+def is_placeholder_file(path) -> bool:
+    try:
+        from PIL import Image
+        with Image.open(path) as im:
+            im.load()
+            return is_placeholder(im)
+    except Exception:  # noqa: BLE001
+        return False
 
 
 def save_flag(cc: str) -> bool:
@@ -900,7 +946,7 @@ def main() -> int:
     # depends on F1's or flagcdn's servers and the headshots are a sharp size
     for key, d in sorted(CACHE.get("drivers", {}).items()):
         if d.get("headshot"):
-            soft(save_headshot, key, d["headshot"])
+            soft(save_headshot, key, d["headshot"], d.get("team", ""))
     for cc in sorted({e["circuit"].get("country_code") for e in events if e["circuit"].get("country_code")}):
         soft(save_flag, cc)
 
