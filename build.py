@@ -147,6 +147,14 @@ TZ_FALLBACK = {
 }
 
 
+TEST_VENUES = {  # where testing usually happens, for years when no Grand Prix there gives us the details
+    "bh": {"id": "bahrain", "name": "Bahrain International Circuit", "locality": "Sakhir", "country": "Bahrain",
+           "country_code": "bh", "lat": 26.0325, "long": 50.5106, "tz": "Asia/Bahrain"},
+    "es": {"id": "catalunya", "name": "Circuit de Barcelona-Catalunya", "locality": "Montmeló", "country": "Spain",
+           "country_code": "es", "lat": 41.57, "long": 2.26111, "tz": "Europe/Madrid"},
+}
+
+
 def iso2(country: str) -> str:
     return COUNTRY.get((country or "").strip().lower(), "")
 
@@ -414,7 +422,7 @@ def testing_events(season: int, known_circuits: dict) -> list[dict]:
             continue
         sessions = soft(get, f"{OPENF1}/sessions", {"meeting_key": m["meeting_key"]}, default=None) or []
         cc = OPENF1_COUNTRY.get(m.get("country_code", ""), "") or iso2(m.get("country_name", ""))
-        here = known_circuits.get(cc)
+        here = known_circuits.get(cc) or TEST_VENUES.get(cc)
         for s in sessions:
             if not s.get("date_start"):
                 continue
@@ -424,7 +432,8 @@ def testing_events(season: int, known_circuits: dict) -> list[dict]:
                 "end": dt.datetime.fromisoformat(s["date_end"]) if s.get("date_end") else None,
                 "circuit": here or {"name": m.get("circuit_short_name"), "locality": m.get("location"),
                                     "country": m.get("country_name"), "country_code": cc, "lat": None,
-                                    "long": None, "tz": "UTC", "id": slug(m.get("circuit_short_name") or "")},
+                                    "long": None, "tz": COUNTRY_TZ.get(cc, "UTC"),
+                                    "id": slug(m.get("circuit_short_name") or "")},
                 "provisional": False,
             })
     if not days:
@@ -777,8 +786,9 @@ def main() -> int:
     soft(refresh_headshots)
 
     events = []
-    for year, races in seasons.items():
-        evs = race_events(races)
+    for year in (TODAY.year, TODAY.year + 1):
+        # next year's testing goes in even before next year's race schedule is published
+        evs = race_events(seasons[year]) if year in seasons else []
         circuits = {}
         for e in evs:
             circuits.setdefault(e["circuit"]["country_code"], e["circuit"])
