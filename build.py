@@ -732,6 +732,65 @@ def notes(e: dict, nxt: dict | None, watch: dict | None, stand: dict | None, cha
     return "\n".join(lines).strip()
 
 
+# ------------------------------------------------------------------ formula1.com event pages
+
+F1_SITE = "https://www.formula1.com/en/racing"
+# formula1.com names most event pages after the country, with a few exceptions by circuit or town
+F1_PAGE_BY_CIRCUIT = {"miami": "miami", "vegas": "las-vegas", "imola": "emilia-romagna", "catalunya": "barcelona-catalunya"}
+F1_PAGE_BY_TOWN = {"miami": "miami", "las vegas": "las-vegas", "imola": "emilia-romagna",
+                   "montmelo": "barcelona-catalunya", "barcelona": "barcelona-catalunya"}
+F1_PAGE_BY_COUNTRY = {"usa": "united-states", "united states": "united-states", "uk": "great-britain",
+                      "united kingdom": "great-britain", "great britain": "great-britain",
+                      "uae": "united-arab-emirates", "united arab emirates": "united-arab-emirates"}
+
+
+def f1_season_pages(season: int) -> list[str] | None:
+    """The event page names on formula1.com's season page, in page order (None if it can't be read)."""
+    req = urllib.request.Request(f"{F1_SITE}/{season}", headers={
+        "User-Agent": "Mozilla/5.0 (compatible; " + AGENT + ")", "Accept": "text/html"})
+    with urllib.request.urlopen(req, timeout=30) as r:
+        html = r.read().decode("utf-8", "replace")
+    found = re.findall(rf"/en/racing/{season}/([a-z0-9-]+)", html)
+    return found or None
+
+
+def f1_pages(events: list[dict]) -> None:
+    """Gives each event the link to its page on formula1.com (e["f1_url"]), for the calendar's URL field.
+    A guessed page name is used only if formula1.com's season page lists it; if that page can't be read at all,
+    the guess stands. Testing days link only when the season page lists its testing pages."""
+    for season in sorted({e["season"] for e in events}):
+        listed = soft(f1_season_pages, season, default=None)
+        names = set(listed or [])
+        tests = sorted({n for n in names if n.startswith("pre-season-testing")})
+        # testing days: a gap of more than two days starts the next test
+        days = sorted((e for e in events if e["season"] == season and e["type"] == "testing"),
+                      key=lambda e: e["start_utc"])
+        block, prev = 0, None
+        for e in days:
+            if prev is None or (e["start_utc"] - prev).days > 2:
+                block += 1
+            prev = e["start_utc"]
+            name = None
+            if f"pre-season-testing-{block}" in names:
+                name = f"pre-season-testing-{block}"
+            elif len(tests) == 1:
+                name = tests[0]
+            if name:
+                e["f1_url"] = f"{F1_SITE}/{season}/{name}"
+        for e in events:
+            if e["season"] != season or e["type"] == "testing":
+                continue
+            c = e["circuit"]
+            cid, town, country = (c.get("id") or "").lower(), slug(c.get("locality") or "").replace("-", " "), (c.get("country") or "").lower()
+            name = (F1_PAGE_BY_CIRCUIT.get(cid) or F1_PAGE_BY_TOWN.get(town)
+                    or F1_PAGE_BY_COUNTRY.get(country) or slug(country))
+            if listed is not None and name not in names:
+                print(f"  note: no formula1.com page called {name!r} for {e['title']}; leaving the link out", file=sys.stderr)
+                continue
+            if name:
+                e["f1_url"] = f"{F1_SITE}/{season}/{name}"
+
+
 def location_text(c: dict) -> str:
     second = ", ".join(x for x in (c.get("locality"), c.get("country")) if x)
     return f"{c['name']}\n{second}" if second else c["name"]
@@ -881,8 +940,8 @@ def build_ics(events: list[dict], extras: dict) -> bytes:
             lines.append(f"X-APPLE-STRUCTURED-LOCATION;VALUE=URI;X-ADDRESS={ics_param(addr)};X-APPLE-RADIUS=500;"
                          f"X-TITLE={ics_param(c['name'])}:geo:{c['lat']},{c['long']}")
         lines.append(f"DESCRIPTION:{ics_text(extras[e['uid']])}")
-        if e.get("wiki"):
-            lines.append(f"URL;VALUE=URI:{e['wiki']}")
+        if e.get("f1_url"):  # the event's page on formula1.com (Apple Calendar shows it at the top)
+            lines.append(f"URL;VALUE=URI:{e['f1_url']}")
         lines += ["TRANSP:TRANSPARENT",  # Show As: Free
                   "X-MICROSOFT-CDO-BUSYSTATUS:FREE",
                   "STATUS:CONFIRMED",
@@ -901,7 +960,7 @@ def public(e: dict, changes: list) -> dict:
     """The event as the Home Assistant pop-up sees it."""
     keep = ("uid", "type", "season", "round", "total_rounds", "sprint_index", "sprint_total", "sprint_weekend",
             "testing_day", "testing_days", "title", "race_name", "flag", "flag_images", "provisional", "timed",
-            "circuit", "weekend", "wiki", "last_time", "last_race_here", "first_sprint_here", "result")
+            "circuit", "weekend", "wiki", "f1_url", "last_time", "last_race_here", "first_sprint_here", "result")
     out = {k: e[k] for k in keep if k in e and e[k] is not None}
     out["start"] = e["start_utc"].isoformat()
     out["end"] = e["end_utc"].isoformat()
@@ -952,6 +1011,7 @@ def main() -> int:
 
     events = [enrich(e) for e in events]
     events.sort(key=lambda e: e["start_utc"])
+    f1_pages(events)
 
     stand = soft(standings)
     watch = title_watch(events, stand)
