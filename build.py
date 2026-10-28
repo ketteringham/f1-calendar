@@ -256,10 +256,22 @@ def refresh_headshots() -> None:
                 seeded.append(year)
 
 
+def known_driver(given: str, last: str) -> dict:
+    """Headshot details for a driver. Data sources disagree on given names ("Andrea Kimi" vs "Kimi"),
+    so try each given name, then the surname alone when only one driver has it."""
+    people = CACHE.get("drivers", {})
+    for tok in (given or "").split() or [""]:
+        hit = people.get(f"{tok[:1]}.{last}".lower())
+        if hit:
+            return hit
+    same = [v for k, v in people.items() if k.split(".", 1)[-1] == (last or "").lower()]
+    return same[0] if len(same) == 1 else {}
+
+
 def person(driver: dict, constructor: dict | None) -> dict:
     first = driver.get("givenName", "")
     last = driver.get("familyName", "")
-    known = CACHE.get("drivers", {}).get(f"{first[:1]}.{last}".lower(), {})
+    known = known_driver(first, last)
     cid = (constructor or {}).get("constructorId", "")
     return {
         "name": f"{first} {last}".strip(),
@@ -304,11 +316,11 @@ def faces(res):
     """Results are cached for good, but headshots arrive later: fill them in fresh each build."""
     if not res:
         return res
-    people = CACHE.get("drivers", {})
     out = dict(res, podium=[])
     for p in res["podium"]:
-        first, _, last = p["name"].partition(" ")
-        known = people.get(f"{first[:1]}.{last}".lower(), {})
+        last = p.get("short") or p["name"].rsplit(" ", 1)[-1]
+        given = p["name"][: -len(last)].strip() if p["name"].endswith(last) else p["name"].split(" ")[0]
+        known = known_driver(given, last)
         out["podium"].append(dict(p, headshot=known.get("headshot") or p.get("headshot")))
     return out
 
