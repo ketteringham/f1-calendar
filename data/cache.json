@@ -6,11 +6,21 @@
    "number": 23,
    "team": "Williams"
   },
+  "a.iwasa": {
+   "colour": "#4781D7",
+   "number": 36,
+   "team": "Red Bull Racing"
+  },
   "a.lindblad": {
    "colour": "#6C98FF",
    "headshot": "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/A/ARVLIN01_Arvid_Lindblad/arvlin01.png.transform/1col/image.png",
    "number": 41,
    "team": "Racing Bulls"
+  },
+  "c.herta": {
+   "colour": "#909090",
+   "number": 25,
+   "team": "Cadillac"
   },
   "c.leclerc": {
    "colour": "#ED1131",
@@ -42,11 +52,26 @@
    "number": 43,
    "team": "Alpine"
   },
+  "f.slater": {
+   "colour": "#F50537",
+   "number": 98,
+   "team": "Audi"
+  },
+  "f.vesti": {
+   "colour": "#00D7B6",
+   "number": 72,
+   "team": "Mercedes"
+  },
   "g.bortoleto": {
    "colour": "#F50537",
    "headshot": "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/G/GABBOR01_Gabriel_Bortoleto/gabbor01.png.transform/1col/image.png",
    "number": 5,
    "team": "Audi"
+  },
+  "g.mini": {
+   "colour": "#00A1E8",
+   "number": 62,
+   "team": "Alpine"
   },
   "g.russell": {
    "colour": "#00D7B6",
@@ -60,11 +85,26 @@
    "number": 6,
    "team": "Red Bull Racing"
   },
+  "j.crawford": {
+   "colour": "#229971",
+   "number": 34,
+   "team": "Aston Martin"
+  },
   "k.antonelli": {
    "colour": "#00D7B6",
    "headshot": "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/K/ANDANT01_Kimi_Antonelli/andant01.png.transform/1col/image.png",
    "number": 12,
    "team": "Mercedes"
+  },
+  "l.browning": {
+   "colour": "#1868DB",
+   "number": 46,
+   "team": "Williams"
+  },
+  "l.fornaroli": {
+   "colour": "#F47600",
+   "number": 67,
+   "team": "McLaren"
   },
   "l.hamilton": {
    "colour": "#ED1131",
@@ -102,6 +142,11 @@
    "number": 27,
    "team": "Audi"
   },
+  "n.tsolov": {
+   "colour": "#6C98FF",
+   "number": 91,
+   "team": "Racing Bulls"
+  },
   "o.bearman": {
    "colour": "#9C9FA2",
    "headshot": "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/O/OLIBEA01_Oliver_Bearman/olibea01.png.transform/1col/image.png",
@@ -119,6 +164,11 @@
    "headshot": "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/P/PIEGAS01_Pierre_Gasly/piegas01.png.transform/1col/image.png",
    "number": 10,
    "team": "Alpine"
+  },
+  "r.hirakawa": {
+   "colour": "#9C9FA2",
+   "number": 50,
+   "team": "Haas F1 Team"
   },
   "s.perez": {
    "colour": "#909090",
