@@ -1477,6 +1477,44 @@
    "race": "Austrian Grand Prix",
    "season": 2026
   },
+  "results:2026:rodriguez": {
+   "from_pole": false,
+   "laps": 71,
+   "podium": [
+    {
+     "code": "VER",
+     "colour": "#4781D7",
+     "driver_id": "max_verstappen",
+     "headshot": "https://ketteringham.github.io/f1-calendar/img/drivers/m-verstappen.webp",
+     "name": "Max Verstappen",
+     "pos": 1,
+     "short": "Verstappen",
+     "team": "Red Bull"
+    },
+    {
+     "code": "HAM",
+     "colour": "#ED1131",
+     "driver_id": "hamilton",
+     "headshot": "https://ketteringham.github.io/f1-calendar/img/drivers/l-hamilton.webp",
+     "name": "Lewis Hamilton",
+     "pos": 2,
+     "short": "Hamilton",
+     "team": "Ferrari"
+    },
+    {
+     "code": "ANT",
+     "colour": "#00D7B6",
+     "driver_id": "antonelli",
+     "headshot": "https://ketteringham.github.io/f1-calendar/img/drivers/k-antonelli.webp",
+     "name": "Andrea Kimi Antonelli",
+     "pos": 3,
+     "short": "Antonelli",
+     "team": "Mercedes"
+    }
+   ],
+   "race": "Mexico City Grand Prix",
+   "season": 2026
+  },
   "results:2026:sepang": {
    "from_pole": true,
    "laps": 55,
