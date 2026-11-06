@@ -34,6 +34,11 @@
    "number": 55,
    "team": "Williams"
   },
+  "d.beganovic": {
+   "colour": "#ED1131",
+   "number": 38,
+   "team": "Ferrari"
+  },
   "e.ocon": {
    "colour": "#9C9FA2",
    "headshot": "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/E/ESTOCO01_Esteban_Ocon/estoco01.png.transform/1col/image.png",
@@ -164,6 +169,11 @@
    "headshot": "https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/P/PIEGAS01_Pierre_Gasly/piegas01.png.transform/1col/image.png",
    "number": 10,
    "team": "Alpine"
+  },
+  "r.câmara": {
+   "colour": "#9C9FA2",
+   "number": 51,
+   "team": "Haas F1 Team"
   },
   "r.hirakawa": {
    "colour": "#9C9FA2",
