@@ -579,6 +579,13 @@ def pole_side(e: dict):
                 t = int(dt.datetime.fromisoformat(p["date"]).timestamp())
                 per_sec.setdefault(t, []).append((p["x"], p["y"]))
             tracks[pos] = {t: (sum(v[0] for v in vs) / len(vs), sum(v[1] for v in vs) / len(vs)) for t, vs in per_sec.items()}
+        if os.environ.get("POLE_DEBUG", "1") and year == 2025:
+            import math
+            ts = sorted(set(tracks[1]) & set(tracks[2]) & set(tracks[3]))
+            for t in ts[::15]:
+                p1, p2, p3 = tracks[1][t], tracks[2][t], tracks[3][t]
+                print(f"    {dt.datetime.fromtimestamp(t, dt.timezone.utc):%H:%M:%S} P1 {p1[0]:.0f},{p1[1]:.0f} P2 {p2[0]:.0f},{p2[1]:.0f} "
+                      f"P3 {p3[0]:.0f},{p3[1]:.0f} d12 {math.dist(p1, p2):.0f} d13 {math.dist(p1, p3):.0f}", file=sys.stderr)
         side = grid_side_from(tracks)
         print(f"  note: pole side {key}: session {sess['session_key']}, positions per car "
               f"{[len(tracks[k]) for k in (1, 2, 3)]}, side {side}", file=sys.stderr)
