@@ -1123,6 +1123,12 @@ def main() -> int:
     events.sort(key=lambda e: e["start_utc"])
     f1_pages(events)
 
+    for e in events:
+        if e.get("grid"):
+            g = e["grid"]
+            print(f"  grid: {e['title']} ({'official' if g['official'] else 'from qualifying'}, {len(g['rows'])} drivers, "
+                  f"P1 {g['rows'][0]['name']} {g['rows'][0]['delta']})")
+
     stand = soft(standings)
     watch = title_watch(events, stand)
     log = track_changes(events)
