@@ -6,7 +6,7 @@ Writes two files into ./site, which GitHub Pages publishes:
            (Grands Prix, Sprints and pre-season testing only; no alerts; shown as Free;
            each event in the circuit's own time zone)
   f1.json  the rich details the Home Assistant pop-up draws from
-           (flags, round progress, last year's podium with headshots, standings, title watch, changes)
+           (flags, round progress, last year's podium with headshots, starting grids, standings, title watch, changes)
 
 Where the data comes from (all free, no keys):
   Jolpica (api.jolpi.ca)  the official schedule, results and standings (the successor to Ergast)
@@ -503,6 +503,107 @@ def standings():
     return {"season": int(s["season"]), "round": int(s["round"]), "drivers": drivers, "constructors": teams}
 
 
+# ------------------------------------------------------------------ starting grids
+
+QUALI_SESSIONS: dict[int, list] = {}
+
+
+def quali_sessions(season: int) -> list[dict]:
+    """Every qualifying-type session of the season (Qualifying, Sprint Qualifying / Shootout), one request a build."""
+    if season not in QUALI_SESSIONS:
+        QUALI_SESSIONS[season] = get(f"{OPENF1}/sessions", {"year": season, "session_type": "Qualifying"}) or []
+    return QUALI_SESSIONS[season]
+
+
+def lap_text(sec: float) -> str:
+    m, s = divmod(float(sec), 60)
+    return f"{int(m)}:{s:06.3f}" if m else f"{s:.3f}"
+
+
+def last_of(v):
+    """OpenF1 gives qualifying times as [Q1, Q2, Q3]; the last part a driver set a time in, and its index."""
+    if isinstance(v, list):
+        for i in range(len(v) - 1, -1, -1):
+            if v[i] is not None:
+                return i, v[i]
+        return None, None
+    return (0, v) if v is not None else (None, None)
+
+
+def starting_grid(e: dict):
+    """The grid for a race or Sprint once its qualifying is over and until it has run: the official starting grid
+    (penalties applied) when OpenF1 has it, otherwise the qualifying order. Each row has the qualifying gap to pole
+    in the last part of qualifying that driver reached."""
+    if e["type"] not in ("race", "sprint") or e["end_utc"] < NOW:
+        return None
+    sprint = e["type"] == "sprint"
+    names = ("Sprint Qualifying", "Sprint Shootout") if sprint else ("Qualifying",)
+    q = next((w for w in e.get("weekend", []) if w["name"] in names and w["timed"]), None)
+    if not q:
+        return None
+    qstart = dt.datetime.fromisoformat(q["start"])
+    if NOW < qstart + dt.timedelta(minutes=50):
+        return None
+    want = (lambda n: "sprint" in n) if sprint else (lambda n: n == "qualifying")
+    match = [s for s in quali_sessions(e["season"])
+             if want((s.get("session_name") or "").lower()) and s.get("date_start")
+             and abs(dt.datetime.fromisoformat(s["date_start"]) - qstart) < dt.timedelta(hours=8)]
+    if not match:
+        return None
+    key = match[0]["session_key"]
+    results = get(f"{OPENF1}/session_result", {"session_key": key}) or []
+    if len(results) < 10:
+        return None  # not classified yet
+    official = soft(get, f"{OPENF1}/starting_grid", {"session_key": key}, default=None) or []
+    drivers = get(f"{OPENF1}/drivers", {"session_key": key}) or []
+    remember_drivers(drivers)
+    who = {d["driver_number"]: d for d in drivers}
+    res = {r["driver_number"]: r for r in results}
+
+    pole = min(results, key=lambda r: r.get("position") or 99)
+    _, pole_time = last_of(pole.get("duration"))
+    prefix = "SQ" if sprint else "Q"
+    rows = []
+    for r in results:
+        num = r["driver_number"]
+        d = who.get(num, {})
+        first, last = (d.get("first_name") or "").strip(), (d.get("last_name") or "").strip()
+        known = known_driver(first, last)
+        part, best = last_of(r.get("duration"))
+        _, gap = last_of(r.get("gap_to_leader"))
+        if r.get("position") == 1 and best:
+            delta = lap_text(best)
+        elif best is None:
+            delta = "No time"
+        elif isinstance(gap, (int, float)):
+            delta = f"+{gap:.3f}"
+        else:
+            delta = str(gap or "")
+        rows.append({
+            "number": num, "quali_pos": r.get("position"),
+            "name": f"{first} {last}".strip() or d.get("full_name") or f"#{num}", "short": last or d.get("broadcast_name"),
+            "code": d.get("name_acronym"), "team": d.get("team_name"),
+            "colour": ("#" + d["team_colour"].lstrip("#").upper()) if d.get("team_colour") else known.get("colour", "#8E8E93"),
+            "headshot": known.get("headshot") or d.get("headshot_url"),
+            "delta": delta,
+            # knocked out in Q1 / Q2: their gap is to the fastest in that part, so say which
+            "part": f"{prefix}{part + 1}" if part is not None and isinstance(r.get("duration"), list)
+                    and part < len(r["duration"]) - 1 else None,
+            "note": "DSQ" if r.get("dsq") else "DNS" if r.get("dns") else None,
+        })
+    if official:
+        place = {g["driver_number"]: g.get("position") for g in official}
+        for row in rows:
+            row["pos"] = place.get(row["number"])  # None: starting from the pit lane
+        rows.sort(key=lambda x: (x["pos"] is None, x["pos"] or 0, x["quali_pos"] or 99))
+    else:
+        for row in rows:
+            row["pos"] = row["quali_pos"]
+        rows.sort(key=lambda x: (x["pos"] is None, x["pos"] or 99))
+    return {"official": bool(official), "session": match[0].get("session_name"),
+            "pole_time": lap_text(pole_time) if pole_time else None, "rows": rows}
+
+
 # ------------------------------------------------------------------ the schedule
 
 
@@ -673,6 +774,8 @@ def enrich(e: dict) -> dict:
         c["first_gp"] = soft(first_gp, c["id"])
         if e["end_utc"] < NOW:
             e["result"] = faces(soft(podium_at, e["season"], c["id"], kind))
+        else:
+            e["grid"] = soft(starting_grid, e)
     return e
 
 
@@ -967,7 +1070,7 @@ def public(e: dict, changes: list) -> dict:
     """The event as the Home Assistant pop-up sees it."""
     keep = ("uid", "type", "season", "round", "total_rounds", "sprint_index", "sprint_total", "sprint_weekend",
             "testing_day", "testing_days", "title", "race_name", "flag", "flag_images", "provisional", "timed",
-            "circuit", "weekend", "wiki", "f1_url", "last_time", "last_race_here", "first_sprint_here", "result")
+            "circuit", "weekend", "wiki", "f1_url", "last_time", "last_race_here", "first_sprint_here", "result", "grid")
     out = {k: e[k] for k in keep if k in e and e[k] is not None}
     out["start"] = e["start_utc"].isoformat()
     out["end"] = e["end_utc"].isoformat()
