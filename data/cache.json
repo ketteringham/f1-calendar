@@ -1259,6 +1259,44 @@
    "race": "Hungarian Grand Prix",
    "season": 2026
   },
+  "results:2026:interlagos": {
+   "from_pole": false,
+   "laps": 71,
+   "podium": [
+    {
+     "code": "NOR",
+     "colour": "#F47600",
+     "driver_id": "norris",
+     "headshot": "https://ketteringham.github.io/f1-calendar/img/drivers/l-norris.webp",
+     "name": "Lando Norris",
+     "pos": 1,
+     "short": "Norris",
+     "team": "McLaren"
+    },
+    {
+     "code": "VER",
+     "colour": "#4781D7",
+     "driver_id": "max_verstappen",
+     "headshot": "https://ketteringham.github.io/f1-calendar/img/drivers/m-verstappen.webp",
+     "name": "Max Verstappen",
+     "pos": 2,
+     "short": "Verstappen",
+     "team": "Red Bull"
+    },
+    {
+     "code": "HAD",
+     "colour": "#4781D7",
+     "driver_id": "hadjar",
+     "headshot": "https://ketteringham.github.io/f1-calendar/img/drivers/i-hadjar.webp",
+     "name": "Isack Hadjar",
+     "pos": 3,
+     "short": "Hadjar",
+     "team": "Red Bull"
+    }
+   ],
+   "race": "Brazilian Grand Prix",
+   "season": 2026
+  },
   "results:2026:madring": {
    "from_pole": false,
    "laps": 57,
