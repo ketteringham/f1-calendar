@@ -564,6 +564,7 @@ def pole_side(e: dict):
         sess = next((x for x in sessions if x.get("date_start") and
                      abs(dt.datetime.fromisoformat(x["date_start"]) - start) < dt.timedelta(hours=3)), None)
         if not sess:
+            print(f"  note: pole side {key}: no OpenF1 race session near {start}", file=sys.stderr)
             continue
         a = (start - dt.timedelta(minutes=3)).strftime("%Y-%m-%dT%H:%M:%S")
         b = (start + dt.timedelta(minutes=12)).strftime("%Y-%m-%dT%H:%M:%S")
@@ -579,6 +580,8 @@ def pole_side(e: dict):
                 per_sec.setdefault(t, []).append((p["x"], p["y"]))
             tracks[pos] = {t: (sum(v[0] for v in vs) / len(vs), sum(v[1] for v in vs) / len(vs)) for t, vs in per_sec.items()}
         side = grid_side_from(tracks)
+        print(f"  note: pole side {key}: session {sess['session_key']}, positions per car "
+              f"{[len(tracks[k]) for k in (1, 2, 3)]}, side {side}", file=sys.stderr)
         if side:
             cache[key] = {"side": side, "season": year}
             return cache[key]
