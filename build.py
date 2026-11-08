@@ -530,6 +530,81 @@ def last_of(v):
     return (0, v) if v is not None else (None, None)
 
 
+def openf1_raw(path: str, query: list[tuple[str, str]]):
+    """OpenF1 filters such as date>… go in the query unencoded, the way OpenF1's own examples write them."""
+    q = "&".join(f"{k}{urllib.parse.quote(str(v), safe=':.+-T')}" for k, v in query)
+    return get(f"{OPENF1}/{path}?{q}")
+
+
+def pole_side(e: dict):
+    """Which side of the grid pole is on at this circuit ('left' or 'right', as the drivers see it facing the first
+    corner), worked out from where P1, P2 and P3 actually stood on the grid at the last race here. P1 and P3 are on
+    the same side, one behind the other, so they give the direction of the track; P2's position across it gives the
+    side. Kept for good per circuit and race; None when it can't be worked out (OpenF1 has positions from 2023)."""
+    cid = e["circuit"].get("id")
+    if not cid:
+        return None
+    cache = CACHE.setdefault("pole_side", {})
+    for year in range(e["season"] - (0 if e["end_utc"] < NOW else 1), max(2022, e["season"] - 4), -1):
+        key = f"{cid}:{year}"
+        if key in cache:
+            return cache[key]
+        j = get(f"{JOLPICA}/{year}/circuits/{cid}/results.json", {"limit": 30})
+        races = (j or {}).get("MRData", {}).get("RaceTable", {}).get("Races", [])
+        if not races:
+            continue
+        r = races[0]
+        slot = {int(x.get("grid") or 0): int(x["number"]) for x in r.get("Results", []) if x.get("number")}
+        if not all(k in slot for k in (1, 2, 3)):
+            continue
+        start, _ = parse_when(r["date"], r.get("time"))
+        if not isinstance(start, dt.datetime):
+            continue
+        sessions = get(f"{OPENF1}/sessions", {"year": year, "session_name": "Race"}) or []
+        sess = next((x for x in sessions if x.get("date_start") and
+                     abs(dt.datetime.fromisoformat(x["date_start"]) - start) < dt.timedelta(hours=3)), None)
+        if not sess:
+            continue
+        a = (start - dt.timedelta(minutes=3)).strftime("%Y-%m-%dT%H:%M:%S")
+        b = (start + dt.timedelta(minutes=12)).strftime("%Y-%m-%dT%H:%M:%S")
+        tracks = {}
+        for pos in (1, 2, 3):
+            rows = openf1_raw("location", [("session_key=", sess["session_key"]), ("driver_number=", slot[pos]),
+                                           ("date>", a), ("date<", b)]) or []
+            per_sec = {}
+            for p in rows:
+                if p.get("x") is None or not p.get("date"):
+                    continue
+                t = int(dt.datetime.fromisoformat(p["date"]).timestamp())
+                per_sec.setdefault(t, []).append((p["x"], p["y"]))
+            tracks[pos] = {t: (sum(v[0] for v in vs) / len(vs), sum(v[1] for v in vs) / len(vs)) for t, vs in per_sec.items()}
+        side = grid_side_from(tracks)
+        if side:
+            cache[key] = {"side": side, "season": year}
+            return cache[key]
+    return None
+
+
+def grid_side_from(tracks: dict):
+    """tracks: {1: {second: (x, y)}, 2: …, 3: …}. Finds a moment when all three cars sit still in a grid pattern."""
+    import math
+    still = lambda tr, t, d: t + 3 in tr and math.dist(tr[t], tr[t + 3]) < d  # noqa: E731
+    for t in sorted(set(tracks[1]) & set(tracks[2]) & set(tracks[3])):
+        p1, p2, p3 = tracks[1][t], tracks[2][t], tracks[3][t]
+        d12, d13 = math.dist(p1, p2), math.dist(p1, p3)
+        if not d12 or not (1.4 < d13 / d12 < 2.6):
+            continue
+        if not all(still(tracks[k], t, d12 * 0.1) for k in (1, 2, 3)):
+            continue
+        fx, fy = p1[0] - p3[0], p1[1] - p3[1]  # P3 is straight behind P1: the way the cars face
+        lx, ly = p2[0] - p1[0], p2[1] - p1[1]
+        across = (fx * ly - fy * lx) / math.hypot(fx, fy)  # > 0: P2 is to P1's left (x right, y up)
+        if abs(across) < d12 * 0.2:
+            continue
+        return "right" if across > 0 else "left"
+    return None
+
+
 def starting_grid(e: dict):
     """The grid for a race or Sprint once its qualifying is over and until it has run: the official starting grid
     (penalties applied) when OpenF1 has it, otherwise the qualifying order. Each row has the qualifying gap to pole
@@ -600,7 +675,9 @@ def starting_grid(e: dict):
         for row in rows:
             row["pos"] = row["quali_pos"]
         rows.sort(key=lambda x: (x["pos"] is None, x["pos"] or 99))
+    side = soft(pole_side, e)
     return {"official": bool(official), "session": match[0].get("session_name"),
+            "pole_side": side["side"] if side else None, "pole_side_from": side["season"] if side else None,
             "pole_time": lap_text(pole_time) if pole_time else None, "rows": rows}
 
 
@@ -1127,7 +1204,8 @@ def main() -> int:
         if e.get("grid"):
             g = e["grid"]
             print(f"  grid: {e['title']} ({'official' if g['official'] else 'from qualifying'}, {len(g['rows'])} drivers, "
-                  f"P1 {g['rows'][0]['name']} {g['rows'][0]['delta']})")
+                  f"P1 {g['rows'][0]['name']} {g['rows'][0]['delta']}, pole on the {g.get('pole_side') or 'unknown side'}"
+                  f"{' (from ' + str(g['pole_side_from']) + ')' if g.get('pole_side_from') else ''})")
 
     stand = soft(standings)
     watch = title_watch(events, stand)
