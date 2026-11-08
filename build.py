@@ -305,6 +305,29 @@ def bigger_versions(url: str, team: str = "") -> list[str]:
     return seen
 
 
+def head_and_shoulders(im):
+    """F1's current library has full-length photos; crop to a square around the head and shoulders.
+    Photos that are already roughly square (the older library's headshots) are left alone."""
+    if im.height < im.width * 1.6:
+        return im
+    a = im.getchannel("A").point(lambda v: 255 if v > 128 else 0)
+    box = a.getbbox()
+    if not box:
+        return im
+    top = box[1]
+    band = a.crop((0, top, im.width, top + int(im.height * 0.07)))  # the top of the head
+    cols = [x for x in range(band.width) if band.crop((x, 0, x + 1, band.height)).getbbox()]
+    cx = (cols[0] + cols[-1]) / 2 if cols else im.width / 2
+    side = int(im.height * 0.24)
+    y0 = top - int(side * 0.07)
+    x0 = int(cx - side / 2)
+    from PIL import Image
+    out = Image.new("RGBA", (side, side), (0, 0, 0, 0))
+    out.alpha_composite(im.crop((max(0, x0), max(0, y0), min(im.width, x0 + side), min(im.height, y0 + side))),
+                        (max(0, -x0), max(0, -y0)))
+    return out
+
+
 def is_placeholder(im) -> bool:
     """F1 answers a missing photo with a plain grey figure. Real headshots are full of colour (faces, race suits)."""
     from PIL import ImageStat
@@ -325,7 +348,7 @@ def save_headshot(key: str, src: str, team: str = "") -> bool:
     if isinstance(m, str):  # older cache entries were just the source link
         m = {"src": m}
     # look again whenever the driver changes team or a new season starts, so the photo is in this year's kit
-    want = {"src": src, "team": team, "season": TODAY.year}
+    want = {"src": src, "team": team, "season": TODAY.year, "framing": 2}  # framing 2: head-and-shoulders crop
     if m and all(m.get(k) == v for k, v in want.items()):
         if dest.exists() and not is_placeholder_file(dest):
             return True
@@ -343,7 +366,7 @@ def save_headshot(key: str, src: str, team: str = "") -> bool:
             im.load()
             if im.width < 120 or is_placeholder(im):  # tiny, or F1's grey stand-in: try the next one
                 continue
-            im = im.convert("RGBA")
+            im = head_and_shoulders(im.convert("RGBA"))
             im.thumbnail((HEADSHOT_PX, HEADSHOT_PX), Image.LANCZOS)
             dest.parent.mkdir(parents=True, exist_ok=True)
             im.save(dest, "WEBP", quality=86, method=6)
