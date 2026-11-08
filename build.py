@@ -282,20 +282,21 @@ TEAM_SLUGS = {  # how F1's image library spells team names
 
 
 def bigger_versions(url: str, team: str = "") -> list[str]:
-    """F1's headshot links ask for a small size; try the larger ones first, then F1's newer image library
-    (where some drivers only exist), then the original link."""
+    """Where to look for a driver's headshot, best first: F1's current image library for this season's team (the
+    photo in this year's kit), then last season's, then the older library's larger sizes, then the original link.
+    The older library (/content/dam/fom-website/) stopped being refreshed, so it can show a driver in an old team's kit."""
     out = []
-    if ".transform/" in url:
-        out.append(url.split(".transform/")[0])  # the original upload
-        out += [re.sub(r"/\d+col/", f"/{n}col/", url) for n in (4, 3, 2)]
-    if re.search(r"\bw_\d+", url):
-        out.append(re.sub(r"\bw_\d+", "w_960", url))
-    code = re.search(r"/([a-z]{6}\d{2})\.png", url)  # e.g. carsai01
+    code = re.search(r"/([a-z]{6}\d{2})\.png", url)  # e.g. isahad01
     if code and team:
         t = TEAM_SLUGS.get(team.strip().lower(), re.sub(r"[^a-z0-9]", "", team.lower()))
         for year in (TODAY.year, TODAY.year - 1):
             out.append(f"https://media.formula1.com/image/upload/c_lfill,w_960/q_auto/v1740000000/common/f1/{year}/"
                        f"{t}/{code.group(1)}/{year}{t}{code.group(1)}right.webp")
+    if ".transform/" in url:
+        out.append(url.split(".transform/")[0])  # the original upload
+        out += [re.sub(r"/\d+col/", f"/{n}col/", url) for n in (4, 3, 2)]
+    if re.search(r"\bw_\d+", url):
+        out.append(re.sub(r"\bw_\d+", "w_960", url))
     out.append(url)
     seen = []
     for u in out:
@@ -323,7 +324,9 @@ def save_headshot(key: str, src: str, team: str = "") -> bool:
     m = meta.get(key)
     if isinstance(m, str):  # older cache entries were just the source link
         m = {"src": m}
-    if m and m.get("src") == src:
+    # look again whenever the driver changes team or a new season starts, so the photo is in this year's kit
+    want = {"src": src, "team": team, "season": TODAY.year}
+    if m and all(m.get(k) == v for k, v in want.items()):
         if dest.exists() and not is_placeholder_file(dest):
             return True
         if m.get("missing") and (NOW - dt.datetime.fromisoformat(m["missing"])).days < 7:
@@ -347,11 +350,12 @@ def save_headshot(key: str, src: str, team: str = "") -> bool:
         except Exception as err:  # noqa: BLE001
             print(f"  note: couldn't process headshot for {key}: {err}", file=sys.stderr)
             continue
-        meta[key] = {"src": src, "from": url}
+        meta[key] = dict(want, **{"from": url})
+        print(f"  headshot {key}: {'this season' if f'/{TODAY.year}/' in url else 'last season' if f'/{TODAY.year - 1}/' in url else 'older library'}")
         return True
     if dest.exists() and is_placeholder_file(dest):
         dest.unlink()  # a placeholder stored by an earlier build
-    meta[key] = {"src": src, "missing": NOW.isoformat()}
+    meta[key] = dict(want, missing=NOW.isoformat())
     print(f"  note: no real headshot for {key} yet", file=sys.stderr)
     return False
 
