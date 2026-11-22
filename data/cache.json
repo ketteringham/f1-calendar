@@ -1890,6 +1890,44 @@
    "race": "Japanese Grand Prix",
    "season": 2026
   },
+  "results:2026:vegas": {
+   "from_pole": true,
+   "laps": 50,
+   "podium": [
+    {
+     "code": "VER",
+     "colour": "#4781D7",
+     "driver_id": "max_verstappen",
+     "headshot": "https://ketteringham.github.io/f1-calendar/img/drivers/m-verstappen.webp",
+     "name": "Max Verstappen",
+     "pos": 1,
+     "short": "Verstappen",
+     "team": "Red Bull"
+    },
+    {
+     "code": "NOR",
+     "colour": "#F47600",
+     "driver_id": "norris",
+     "headshot": "https://ketteringham.github.io/f1-calendar/img/drivers/l-norris.webp",
+     "name": "Lando Norris",
+     "pos": 2,
+     "short": "Norris",
+     "team": "McLaren"
+    },
+    {
+     "code": "PIA",
+     "colour": "#F47600",
+     "driver_id": "piastri",
+     "headshot": "https://ketteringham.github.io/f1-calendar/img/drivers/o-piastri.webp",
+     "name": "Oscar Piastri",
+     "pos": 3,
+     "short": "Piastri",
+     "team": "McLaren"
+    }
+   ],
+   "race": "Las Vegas Grand Prix",
+   "season": 2026
+  },
   "results:2026:villeneuve": {
    "from_pole": false,
    "laps": 68,
